@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gender Architect: Predict & Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --boy-deep: #1a3a5c;
+    --boy-mid: #2d6a9f;
+    --boy-light: #a8d8f0;
+    --boy-pale: #e8f4fb;
+    --girl-deep: #7b2d5e;
+    --girl-mid: #c2567a;
+    --girl-light: #f0a8c8;
+    --girl-pale: #fdf0f5;
+    --neutral-bg: #fdfcfa;
+    --neutral-dark: #2c2c3e;
+    --neutral-mid: #6b6b80;
+    --gold: #d4a843;
+    --gold-light: #f5e6c0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--neutral-bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Decorative background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(168,216,240,0.25) 0%, transparent 40%),
+      radial-gradient(circle at 85% 75%, rgba(240,168,200,0.25) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(212,168,67,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 40px 20px 30px;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  .stork-banner {
+    font-size: 3.5rem;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(-2deg); }
+    50% { transform: translateY(-10px) rotate(2deg); }
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    color: var(--neutral-dark);
+    margin-top: 12px;
+    line-height: 1.2;
+  }
+
+  header h1 span {
+    background: linear-gradient(135deg, var(--boy-mid), var(--girl-mid));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p {
+    color: var(--neutral-mid);
+    font-size: 0.95rem;
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  /* Gold divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .divider span { color: var(--gold); font-size: 1.1rem; }
+
+  /* Mode Toggle */
+  .mode-toggle {
+    display: flex;
+    background: white;
+    border-radius: 50px;
+    padding: 4px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08), inset 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 28px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 46px;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    background: transparent;
+    color: var(--neutral-mid);
+    line-height: 1.3;
+  }
+
+  .mode-btn.active {
+    background: linear-gradient(135deg, var(--boy-mid), var(--girl-mid));
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+
+  /* Cards */
+  .card {
+    background: white;
+    border-radius: 24px;
+    padding: 28px 24px;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.07);
+    margin-bottom: 20px;
+    animation: fadeUp 0.6s 0.3s ease both;
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+
+  .card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: var(--neutral-dark);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Form elements */
+  .field-group {
+    display: grid;
+    gap: 16px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--neutral-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  input[type="date"] {
+    padding: 12px 14px;
+    border: 2px solid #e8e8ef;
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    color: var(--neutral-dark);
+    transition: border-color 0.2s;
+    outline: none;
+    background: #fafafe;
+    width: 100%;
+  }
+
+  input[type="date"]:focus { border-color: var(--boy-mid); background: white; }
+
+  /* Gender selector */
+  .gender-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .gender-opt {
+    border: 2px solid #e8e8ef;
+    border-radius: 16px;
+    padding: 16px 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.25s ease;
+    background: #fafafe;
+    user-select: none;
+  }
+
+  .gender-opt:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+
+  .gender-opt.boy.selected {
+    border-color: var(--boy-mid);
+    background: var(--boy-pale);
+    box-shadow: 0 4px 20px rgba(45,106,159,0.2);
+  }
+
+  .gender-opt.girl.selected {
+    border-color: var(--girl-mid);
+    background: var(--girl-pale);
+    box-shadow: 0 4px 20px rgba(194,86,122,0.2);
+  }
+
+  .gender-opt .emoji { font-size: 2.2rem; display: block; margin-bottom: 6px; }
+  .gender-opt .label { font-weight: 700; font-size: 0.95rem; color: var(--neutral-dark); }
+  .gender-opt .sublabel { font-size: 0.75rem; color: var(--neutral-mid); margin-top: 2px; }
+
+  /* CTA Button */
+  .cta-btn {
+    width: 100%;
+    padding: 16px 24px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--boy-mid) 0%, #4a90c4 40%, var(--girl-mid) 100%);
+    color: white;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+    position: relative;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .cta-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(0,0,0,0.22); }
+  .cta-btn:hover::before { left: 100%; }
+  .cta-btn:active { transform: translateY(0); }
+
+  /* Results */
+  #results { display: none; animation: fadeUp 0.6s ease both; }
+
+  .result-card {
+    border-radius: 24px;
+    padding: 30px 24px;
+    text-align: center;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-card.boy {
+    background: linear-gradient(145deg, var(--boy-pale), #d4eef8);
+    border: 2px solid var(--boy-light);
+  }
+
+  .result-card.girl {
+    background: linear-gradient(145deg, var(--girl-pale), #f8d4e4);
+    border: 2px solid var(--girl-light);
+  }
+
+  .result-card::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    opacity: 0.12;
+  }
+
+  .result-card.boy::before { background: var(--boy-mid); }
+  .result-card.girl::before { background: var(--girl-mid); }
+
+  .result-emoji {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 12px;
+    animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  }
+
+  @keyframes pop {
+    0% { transform: scale(0.3); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    margin-bottom: 6px;
+  }
+
+  .result-card.boy .result-title { color: var(--boy-deep); }
+  .result-card.girl .result-title { color: var(--girl-deep); }
+
+  .result-subtitle { color: var(--neutral-mid); font-size: 0.9rem; }
+
+  /* Info Pills */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .info-pill {
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: left;
+  }
+
+  .info-pill .pill-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--neutral-mid);
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+
+  .info-pill .pill-value {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--neutral-dark);
+  }
+
+  /* Execution Tips */
+  .exec-card {
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .exec-card.boy { background: linear-gradient(135deg, var(--boy-pale), white); border-left: 4px solid var(--boy-mid); }
+  .exec-card.girl { background: linear-gradient(135deg, var(--girl-pale), white); border-left: 4px solid var(--girl-mid); }
+
+  .exec-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .exec-card.boy h3 { color: var(--boy-deep); }
+  .exec-card.girl h3 { color: var(--girl-deep); }
+
+  .tip-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    background: white;
+    border-radius: 10px;
+  }
+
+  .tip-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+
+  .tip-text { font-size: 0.88rem; color: var(--neutral-dark); line-height: 1.55; }
+  .tip-text strong { display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--neutral-mid); margin-bottom: 2px; }
+
+  /* Planner results */
+  .month-list { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+
+  .month-item {
+    background: white;
+    border-radius: 16px;
+    padding: 16px 18px;
+    border: 1px solid #eee;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+    align-items: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .month-item:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+  .month-item.boy { border-left: 4px solid var(--boy-mid); }
+  .month-item.girl { border-left: 4px solid var(--girl-mid); }
+
+  .month-badge {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .month-badge.boy { background: var(--boy-pale); color: var(--boy-deep); }
+  .month-badge.girl { background: var(--girl-pale); color: var(--girl-deep); }
+
+  .month-badge .mon { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .month-badge .yr { font-size: 0.75rem; opacity: 0.7; }
+
+  .month-details .action-window {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--neutral-dark);
+    margin-bottom: 3px;
+  }
+
+  .month-details .lmp-note {
+    font-size: 0.78rem;
+    color: var(--neutral-mid);
+  }
+
+  .month-details .shettles-tip {
+    font-size: 0.8rem;
+    margin-top: 5px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    font-weight: 600;
+  }
+
+  .month-details .shettles-tip.boy { background: var(--boy-pale); color: var(--boy-deep); }
+  .month-details .shettles-tip.girl { background: var(--girl-pale); color: var(--girl-deep); }
+
+  /* Footer */
+  footer {
+    margin-top: 32px;
+    padding: 20px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 16px;
+    border: 1px solid #e8e8ef;
+    font-size: 0.78rem;
+    color: var(--neutral-mid);
+    line-height: 1.6;
+    text-align: center;
+    backdrop-filter: blur(8px);
+  }
+
+  footer strong { color: var(--neutral-dark); }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .info-grid { grid-template-columns: 1fr; }
+    .gender-selector { grid-template-columns: 1fr 1fr; }
+    header h1 { font-size: 1.6rem; }
+  }
+
+  /* Confetti dots */
+  .confetti { position: fixed; pointer-events: none; z-index: 999; top: 0; left: 0; width: 100%; height: 0; }
+  .dot {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    animation: confettiFall linear both;
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="confetti" id="confetti"></div>
+<div class="container">
+
+  <header>
+    <span class="stork-banner">🍼</span>
+    <h1><span>Gender Architect</span><br>Predict & Plan</h1>
+    <p>Combining ancient wisdom with modern biology</p>
+  </header>
+
+  <div class="divider"><span>✦</span></div>
+
+  <!-- Mode Toggle -->
+  <div class="mode-toggle">
+    <button class="mode-btn active" onclick="setMode('validate')" id="btn-validate">
+      🔍 Mode A: Validate<br><small>Predict a past conception</small>
+    </button>
+    <button class="mode-btn" onclick="setMode('plan')" id="btn-plan">
+      📅 Mode B: Planner<br><small>Find your best months</small>
+    </button>
+  </div>
+
+  <!-- Mode A: Validation -->
+  <div id="mode-validate">
+    <div class="card">
+      <h2>👩 Mode A — Validate a Conception</h2>
+      <div class="field-group">
+        <div class="field">
+          <label>Mother's Date of Birth</label>
+          <input type="date" id="v-dob" />
+        </div>
+        <div class="field">
+          <label>Last Menstrual Period (LMP) at Conception</label>
+          <input type="date" id="v-lmp" />
+        </div>
+      </div>
+    </div>
+    <button class="cta-btn" onclick="runValidation()">✨ Analyze My Stars & Biology ✨</button>
+  </div>
+
+  <!-- Mode B: Planner -->
+  <div id="mode-plan" style="display:none">
+    <div class="card">
+      <h2>📅 Mode B — High-Chance Planner</h2>
+      <div class="field-group">
+        <div class="field">
+          <label>Mother's Date of Birth</label>
+          <input type="date" id="p-dob" />
+        </div>
+        <div class="field">
+          <label>Target Gender</label>
+          <div class="gender-selector">
+            <div class="gender-opt boy selected" id="opt-boy" onclick="selectGender('boy')">
+              <span class="emoji">👦</span>
+              <div class="label">Baby Boy</div>
+              <div class="sublabel">Fast Y-sperm</div>
+            </div>
+            <div class="gender-opt girl" id="opt-girl" onclick="selectGender('girl')">
+              <span class="emoji">👧</span>
+              <div class="label">Baby Girl</div>
+              <div class="sublabel">Resilient X-sperm</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="cta-btn" onclick="runPlanner()">✨ Analyze My Stars & Biology ✨</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="divider" style="margin-top:24px"><span>✦</span></div>
+    <div id="results-inner"></div>
+  </div>
+
+  <footer>
+    <strong>⚠️ TECHNICAL CAUTION:</strong> This tool combines traditional folklore (Chinese Gender Chart) with biological theories (Shettles Method). It is <strong>NOT medically proven</strong>. Results are for entertainment and educational purposes only. <strong>100% accuracy</strong> is only possible through medical testing (Ultrasound / DNA / Genetic Testing). Always consult a qualified healthcare provider for medical decisions.
+  </footer>
+
+</div>
+
+<script>
+// ─── Chinese Gender Chart (Mother's Age vs Lunar Conception Month) ───────────
+// Values: 'B' = Boy, 'G' = Girl
+// Index 0 = Jan, 11 = Dec; outer key = mother's age at conception
+const CHART = {
+  18: ['G','B','G','B','B','G','G','B','G','B','B','G'],
+  19: ['B','G','B','G','G','B','B','G','B','G','G','B'],
+  20: ['G','B','G','B','B','G','G','B','G','B','B','G'],
+  21: ['B','G','B','G','G','B','B','G','B','G','G','B'],
+  22: ['G','B','G','B','B','G','B','G','B','G','B','G'],
+  23: ['B','G','B','G','G','B','G','B','G','B','G','B'],
+  24: ['B','B','G','G','B','G','B','B','G','G','B','G'],
+  25: ['G','G','B','B','G','B','G','G','B','B','G','B'],
+  26: ['B','B','G','G','B','B','B','G','B','G','G','B'],
+  27: ['G','G','B','B','G','G','G','B','G','B','B','G'],
+  28: ['G','B','G','G','B','G','G','B','G','B','G','B'],
+  29: ['B','G','B','B','G','B','B','G','B','G','B','G'],
+  30: ['B','G','G','B','G','B','G','B','B','G','B','G'],
+  31: ['G','B','B','G','B','G','B','G','G','B','G','B'],
+  32: ['B','G','B','G','B','G','B','G','B','G','B','G'],
+  33: ['G','B','G','B','G','B','G','B','G','B','G','B'],
+  34: ['B','G','B','G','B','G','B','B','G','B','G','B'],
+  35: ['G','B','G','B','G','B','G','G','B','G','B','G'],
+  36: ['B','G','B','G','B','B','G','B','G','B','G','B'],
+  37: ['G','B','G','B','G','G','B','G','B','G','B','G'],
+  38: ['B','G','B','G','G','B','G','B','B','G','B','G'],
+  39: ['G','B','G','B','B','G','B','G','G','B','G','B'],
+  40: ['G','B','B','G','B','G','G','B','G','B','B','G'],
+  41: ['B','G','G','B','G','B','B','G','B','G','G','B'],
+  42: ['B','B','G','G','B','B','G','G','B','B','G','G'],
+  43: ['G','G','B','B','G','G','B','B','G','G','B','B'],
+  44: ['B','G','B','G','B','G','B','G','B','G','B','G'],
+  45: ['G','B','G','B','G','B','G','B','G','B','G','B'],
+};
+
+let currentMode = 'validate';
+let targetGender = 'boy';
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('mode-validate').style.display = mode === 'validate' ? '' : 'none';
+  document.getElementById('mode-plan').style.display = mode === 'plan' ? '' : 'none';
+  document.getElementById('btn-validate').classList.toggle('active', mode === 'validate');
+  document.getElementById('btn-plan').classList.toggle('active', mode === 'plan');
+  document.getElementById('results').style.display = 'none';
+}
+
+function selectGender(g) {
+  targetGender = g;
+  document.getElementById('opt-boy').classList.toggle('selected', g === 'boy');
+  document.getElementById('opt-girl').classList.toggle('selected', g === 'girl');
+}
+
+// Convert Gregorian date to approximate Chinese Lunar month (simple approach)
+function getLunarMonth(date) {
+  // Simple approximation: Chinese New Year offset
+  // Chinese New Year is approx Jan 21 – Feb 20 range
+  // Lunar month 1 starts around late Jan/Feb
+  // This is a simplified mapping used by most online charts
+  const month = date.getMonth(); // 0-11
+  const day = date.getDate();
+  // Adjust: if before ~Jan 20, use previous year's last lunar month
+  // Simple western-to-lunar month approximation:
+  const lunarOffsets = [1,1,0,0,0,0,0,0,0,0,1,1]; // slight adjustment
+  let lunarMonth = month;
+  // Most charts use the solar (Gregorian) month directly as approximation
+  return lunarMonth; // 0-indexed
+}
+
+function getAgeAtDate(dob, refDate) {
+  let age = refDate.getFullYear() - dob.getFullYear();
+  const m = refDate.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && refDate.getDate() < dob.getDate())) age--;
+  return age;
+}
+
+function addDays(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function formatDate(date) {
+  return date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function formatShort(date) {
+  return date.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+}
+
+function getChartPrediction(age, conceptionDate) {
+  const clamped = Math.min(45, Math.max(18, age));
+  const lunarMonth = getLunarMonth(conceptionDate);
+  const row = CHART[clamped];
+  if (!row) return null;
+  return row[lunarMonth];
+}
+
+function getExecutionTips(gender) {
+  if (gender === 'B') {
+    return {
+      timing: 'Exactly on Ovulation Day (LMP + 14 days)',
+      logic: 'Y-sperm (male) are faster but short-lived. Timing intercourse precisely on ovulation day gives them the shortest possible race to the egg.',
+      icon: '🏃‍♂️',
+      extra: 'Deeper penetration positions may deposit sperm closer to the cervix, reducing travel time for Y-sperm.'
+    };
+  } else {
+    return {
+      timing: '2–3 Days Before Ovulation (LMP + 11 to + 12 days)',
+      logic: 'X-sperm (female) are slower but extremely resilient and long-lived. They can survive 3–5 days waiting for the egg — giving them a natural advantage.',
+      icon: '💪',
+      extra: 'Shallower penetration and slightly acidic environment before ovulation also tends to favour X-sperm survival.'
+    };
+  }
+}
+
+// ─── MODE A: VALIDATION ───────────────────────────────────────────────────────
+function runValidation() {
+  const dobVal = document.getElementById('v-dob').value;
+  const lmpVal = document.getElementById('v-lmp').value;
+  if (!dobVal || !lmpVal) { alert('Please enter both dates.'); return; }
+
+  const dob = new Date(dobVal);
+  const lmp = new Date(lmpVal);
+  const conceptionDate = addDays(lmp, 14);
+  const ageAtConception = getAgeAtDate(dob, conceptionDate);
+
+  if (ageAtConception < 18 || ageAtConception > 45) {
+    alert(`Mother's age at conception (${ageAtConception}) is outside the chart range of 18–45.`);
+    return;
+  }
+
+  const prediction = getChartPrediction(ageAtConception, conceptionDate);
+  const gender = prediction === 'B' ? 'boy' : 'girl';
+  const tips = getExecutionTips(prediction);
+
+  const html = `
+    <div class="result-card ${gender}">
+      <span class="result-emoji">${gender === 'boy' ? '👶🏻🔵' : '👶🏻🩷'}</span>
+      <div class="result-title">${gender === 'boy' ? '♂ Baby Boy Predicted' : '♀ Baby Girl Predicted'}</div>
+      <div class="result-subtitle">Based on Chart + Shettles Method analysis</div>
+      <div class="info-grid">
+        <div class="info-pill">
+          <div class="pill-label">Mother's Age</div>
+          <div class="pill-value">${ageAtConception} years</div>
+        </div>
+        <div class="info-pill">
+          <div class="pill-label">LMP Date</div>
+          <div class="pill-value">${formatDate(lmp)}</div>
+        </div>
+        <div class="info-pill">
+          <div class="pill-label">Est. Conception</div>
+          <div class="pill-value">${formatDate(conceptionDate)}</div>
+        </div>
+        <div class="info-pill">
+          <div class="pill-label">Chart Month</div>
+          <div class="pill-value">${conceptionDate.toLocaleString('default',{month:'long'})}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="exec-card ${gender}">
+      <h3>${gender === 'boy' ? '💙 Boy Conception Tips (Shettles)' : '💗 Girl Conception Tips (Shettles)'}</h3>
+      <div class="tip-row">
+        <span class="tip-icon">🗓️</span>
+        <div class="tip-text"><strong>Optimal Timing</strong>${tips.timing}</div>
+      </div>
+      <div class="tip-row">
+        <span class="tip-icon">${tips.icon}</span>
+        <div class="tip-text"><strong>Scientific Logic</strong>${tips.logic}</div>
+      </div>
+      <div class="tip-row">
+        <span class="tip-icon">💡</span>
+        <div class="tip-text"><strong>Additional Tip</strong>${tips.extra}</div>
+      </div>
+    </div>
+  `;
+
+  showResults(html);
+  launchConfetti(gender);
+}
+
+// ─── MODE B: PLANNER ──────────────────────────────────────────────────────────
+function runPlanner() {
+  const dobVal = document.getElementById('p-dob').value;
+  if (!dobVal) { alert('Please enter your date of birth.'); return; }
+
+  const dob = new Date(dobVal);
+  const today = new Date();
+  const gender = targetGender;
+  const targetCode = gender === 'boy' ? 'B' : 'G';
+
+  let matchMonths = [];
+  // Search next 18 months
+  let cursor = new Date(today.getFullYear(), today.getMonth(), 1);
+  for (let i = 0; i < 18 && matchMonths.length < 8; i++) {
+    const testLMP = new Date(cursor);
+    const testConception = addDays(testLMP, 14);
+    const age = getAgeAtDate(dob, testConception);
+
+    if (age >= 18 && age <= 45) {
+      const pred = getChartPrediction(age, testConception);
+      if (pred === targetCode) {
+        // Shettles action window
+        const ovDay = addDays(testLMP, 14);
+        let actionFrom, actionTo, shettlesNote;
+        if (gender === 'boy') {
+          actionFrom = ovDay;
+          actionTo = ovDay;
+          shettlesNote = `🏃 Act on ovulation day: ${formatShort(ovDay)}`;
+        } else {
+          actionFrom = addDays(testLMP, 11);
+          actionTo = addDays(testLMP, 12);
+          shettlesNote = `💪 Act 2–3 days before ovulation: ${formatShort(actionFrom)}–${formatShort(actionTo)}`;
+        }
+
+        matchMonths.push({
+          month: cursor.toLocaleString('default',{month:'short'}),
+          year: cursor.getFullYear(),
+          lmp: new Date(testLMP),
+          conception: testConception,
+          actionFrom, actionTo,
+          shettlesNote, age
+        });
+      }
+    }
+
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
+  if (matchMonths.length === 0) {
+    showResults(`<div class="card"><p style="text-align:center;color:var(--neutral-mid);padding:20px">No matching months found in the next 18 months for the selected gender and age range.</p></div>`);
+    return;
+  }
+
+  const tips = getExecutionTips(targetCode);
+  const gColor = gender;
+
+  let listHtml = matchMonths.map((m, idx) => `
+    <div class="month-item ${gColor}" style="animation-delay:${idx * 0.06}s">
+      <div class="month-badge ${gColor}">
+        <div class="mon">${m.month}</div>
+        <div class="yr">${m.year}</div>
+      </div>
+      <div class="month-details">
+        <div class="action-window">LMP around: ${formatDate(m.lmp)}</div>
+        <div class="lmp-note">Ovulation window: ${formatDate(m.conception)} · Age: ${m.age}</div>
+        <span class="shettles-tip ${gColor}">${m.shettlesNote}</span>
+      </div>
+    </div>
+  `).join('');
+
+  const html = `
+    <div class="card" style="margin-bottom:16px">
+      <h2>${gender === 'boy' ? '💙 Best Months for a Baby Boy' : '💗 Best Months for a Baby Girl'}</h2>
+      <p style="font-size:0.85rem;color:var(--neutral-mid);margin-bottom:16px">
+        Showing next <strong>${matchMonths.length} matching months</strong> — Chart + Shettles Method combined
+      </p>
+      <div class="month-list">${listHtml}</div>
+    </div>
+
+    <div class="exec-card ${gender}">
+      <h3>${gender === 'boy' ? '💙 Your Boy Strategy' : '💗 Your Girl Strategy'}</h3>
+      <div class="tip-row">
+        <span class="tip-icon">🗓️</span>
+        <div class="tip-text"><strong>Timing Rule</strong>${tips.timing}</div>
+      </div>
+      <div class="tip-row">
+        <span class="tip-icon">${tips.icon}</span>
+        <div class="tip-text"><strong>Why It Works</strong>${tips.logic}</div>
+      </div>
+      <div class="tip-row">
+        <span class="tip-icon">💡</span>
+        <div class="tip-text"><strong>Stack the Deck</strong>By combining the correct Chart month AND the Shettles timing, you're applying both ancient tradition and modern biological theory simultaneously — maximising your statistical chance.</div>
+      </div>
+    </div>
+  `;
+
+  showResults(html);
+  launchConfetti(gender);
+}
+
+function showResults(html) {
+  const el = document.getElementById('results');
+  document.getElementById('results-inner').innerHTML = html;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function launchConfetti(gender) {
+  const container = document.getElementById('confetti');
+  container.innerHTML = '';
+  const colors = gender === 'boy'
+    ? ['#a8d8f0','#2d6a9f','#d4eef8','#ffffff']
+    : ['#f0a8c8','#c2567a','#f8d4e4','#ffffff'];
+  for (let i = 0; i < 30; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.style.left = Math.random() * 100 + 'vw';
+    dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+    dot.style.animationDuration = (2 + Math.random() * 2) + 's';
+    dot.style.animationDelay = (Math.random() * 0.8) + 's';
+    dot.style.width = dot.style.height = (6 + Math.random() * 8) + 'px';
+    container.appendChild(dot);
+    setTimeout(() => dot.remove(), 4000);
+  }
+}
+</script>
+</body>
+</html>
